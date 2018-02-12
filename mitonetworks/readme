@@ -1,0 +1,5 @@
+Need
+
+$ ln -s /home/juvid/Dropbox/Work/Mit_and_Metabolism/Networks_mtDNA_dynamics/mitonetworks /home/juvid/anaconda2/lib/python2.7/site-packages
+
+to use this package, or turn it into an installable package by adding a setup.py and installing into anaconda.
