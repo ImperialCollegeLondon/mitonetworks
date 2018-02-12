@@ -8,6 +8,7 @@ Author: Juvid Aryaman
 
 ```
 $ git clone https://github.com/ImperialCollegeLondon/mitonetworks.git
+$ cd mitonetworks
 $ python setup.py sdist 
 $ pip install ./dist/mitonetworks-0.0.1.tar.gz
 ```
