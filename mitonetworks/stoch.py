@@ -2,14 +2,13 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib as mpl
-from pdb import set_trace
 from os import getcwd
 from warnings import warn
 import functools 
-
 from matplotlib import cm
-
 from ipywidgets import interact
+
+#from pdb import set_trace
 
 def reset_plots():
 	plt.close('all')

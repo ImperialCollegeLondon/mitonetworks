@@ -3,9 +3,8 @@ from scipy.integrate import ode
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 import os
-from pdb import set_trace
-
 import time
+#from pdb import set_trace
 
 def reset_plots():
 	plt.close('all')
