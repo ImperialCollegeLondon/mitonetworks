@@ -6,6 +6,18 @@ from pdb import set_trace
 
 from matplotlib import cm
 
+def reset_plots():
+	plt.close('all')
+	fontsize = 20
+	plt.rc('font',**{'family':'sans-serif','sans-serif':['Helvetica']})
+	plt.rc('text', usetex=True)
+	font = {'size' : fontsize}
+	plt.rc('font', **font)
+	mpl.rc('lines', markersize=10)
+	plt.rcParams.update({'axes.labelsize': fontsize})
+	mpl.rcParams['text.latex.preamble'] = [r'\usepackage{amsmath}', r'\usepackage{amsfonts}']
+
+
 ####################################################################
 # Useful plots
 ####################################################################
@@ -20,7 +32,7 @@ def make_heatmap(matrix,
 		plotextensions = ['svg','png'],
 		colorbar_heatmap=cm.jet,
 		figname = None,
-		vmin = None, vmax = None):	
+		vmin = None, vmax = None,out_dir=os.getcwd()):	
 		"""Make a heatmap of a matrix where rows are ratios and columns are magnitudes of the fusion/fission rate
 		
 			:param matrix: A numpy matrix, intensities for heatmap. Expect a square matrix of dimension n_points x n_points
@@ -47,5 +59,5 @@ def make_heatmap(matrix,
 		ax.set_yticklabels(yticklabels[::-1])
 
 		if figname is not None:
-			for p in self.plotextensions:
-				plt.savefig(self.out_dir+'/'+self.ctrl_name+'_'+figname+'.'+p, bbox_inches='tight')
+			for p in plotextensions:
+				plt.savefig(out_dir+'/'+figname+'.'+p, bbox_inches='tight')

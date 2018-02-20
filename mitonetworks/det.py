@@ -6,6 +6,10 @@ import os
 import time
 #from pdb import set_trace
 
+'''
+parameter ordering convention: ['ws','wf','ms','mf']
+'''
+
 def reset_plots():
 	plt.close('all')
 	fontsize = 20
@@ -24,12 +28,12 @@ def hello_world():
 # Feedback controls 
 #######################
 
-def network_system(ws, wf, ms, mf, gamma, beta, rep_rate, degrate, xi):
-	wsdot = -1.0 * gamma * ws * ws - gamma * ws * wf + beta * wf - rep_rate * ws - degrate * ws - gamma * mf * ws - gamma * ws * ms
-	msdot = -1.0 * gamma * ms * ms - gamma * ms * mf + beta * mf - rep_rate * ms - degrate * ms  - gamma * wf * ms - gamma * ws * ms
+def network_system(ws, wf, ms, mf, gamma, beta, rep_rate, degrate, xi, epsilon_pcp=1.0):
+	wsdot = -1.0 * gamma * ws * ws - gamma * ws * wf + beta * wf - rep_rate * ws - degrate * ws - epsilon_pcp * gamma * mf * ws - epsilon_pcp * gamma * ws * ms
+	msdot = -1.0 * gamma * ms * ms - gamma * ms * mf + beta * mf - rep_rate * ms - degrate * ms  - epsilon_pcp * gamma * wf * ms - epsilon_pcp * gamma * ws * ms
 
-	wfdot = 1.0 * gamma * ws * ws + gamma * ws * wf - beta * wf + rep_rate * (2.0*ws + wf) - xi * degrate * wf + gamma * mf * ws + gamma * ws * ms
-	mfdot = 1.0 * gamma * ms * ms + gamma * ms * mf - beta * mf + rep_rate * (2.0*ms + mf) - xi * degrate * mf + gamma * wf * ms + gamma * ws * ms
+	wfdot = 1.0 * gamma * ws * ws + gamma * ws * wf - beta * wf + rep_rate * (2.0*ws + wf) - xi * degrate * wf + epsilon_pcp * gamma * mf * ws + epsilon_pcp * gamma * ws * ms
+	mfdot = 1.0 * gamma * ms * ms + gamma * ms * mf - beta * mf + rep_rate * (2.0*ms + mf) - xi * degrate * mf + epsilon_pcp * gamma * wf * ms + epsilon_pcp * gamma * ws * ms
 
 	return [wsdot, wfdot, msdot, mfdot]
 
@@ -117,6 +121,11 @@ def E_linear_feedback_control(t, y, params):
 	mu = params['mu']
 	delta = params['delta']
 
+	if 'epsilon_pcp' in params:
+		epsilon_pcp = params['epsilon_pcp']
+	else:
+		epsilon_pcp = 1.0
+
 	ws, wf, ms, mf = y
 
 	w = ws + wf
@@ -127,7 +136,7 @@ def E_linear_feedback_control(t, y, params):
 	if rep_rate < 0:
 		rep_rate = 0
 
-	return network_system(ws, wf, ms, mf, gamma, beta, rep_rate, mu, xi)
+	return network_system(ws, wf, ms, mf, gamma, beta, rep_rate, mu, xi, epsilon_pcp=epsilon_pcp)
 
 def F_production_indep_wt(t, y, params):
 	beta = params['beta']
@@ -379,6 +388,52 @@ def Y_linear_feedback_deg_ss(ms, params):
 
 	return ws, wf, ms, mf
 
+#########################################
+# Jacobian matrices
+#########################################
+
+"""
+Evaluate the Jacobian matrix of a feedback control at a particular state. Of the form
+
+def jac_matrix_fcn(state, params):
+	...
+	return jac
+
+:param state: A list of doubles, using the parameter ordering convention ['ws','wf','ms','mf']
+:param params: A dict of parameters of the control
+"""
+
+def E_linear_feedback_control_jac(state, params):
+	xi = params['xi']
+	gamma = params['gamma']
+	beta = params['beta']
+	kappa = params['kappa']
+	b = params['b']
+	mu = params['mu']
+	delta = params['delta']
+
+	ws, wf, ms, mf = state
+
+	J=np.array(
+		[[-(gamma*mf) - gamma*ms - 2*mu - gamma*wf - b*(kappa - delta*mf - delta*ms - wf - ws) + b*ws - 2*gamma*ws,beta + b*ws - gamma*ws,
+		b*delta*ws - gamma*ws,
+		b*delta*ws - gamma*ws],
+		[gamma*mf + gamma*ms + gamma*wf + 2*(mu + b*(kappa - delta*mf - delta*ms - wf - ws)) + 2*gamma*ws - b*(wf + 2*ws),
+		-beta + mu + b*(kappa - delta*mf - delta*ms - wf - ws) + gamma*ws - b*(wf + 2*ws) - mu*xi,
+		gamma*ws - b*delta*(wf + 2*ws),
+		gamma*ws - b*delta*(wf + 2*ws)],
+		[b*ms - gamma*ms,
+		b*ms - gamma*ms,
+		-(gamma*mf) + b*delta*ms - 2*gamma*ms - 2*mu - gamma*wf - b*(kappa - delta*mf - delta*ms - wf - ws) - gamma*ws,
+		beta + b*delta*ms - gamma*ms],
+		[gamma*ms - b*(mf + 2*ms),
+		gamma*ms - b*(mf + 2*ms),
+		gamma*mf + 2*gamma*ms - b*delta*(mf + 2*ms) + gamma*wf + 2*(mu + b*(kappa - delta*mf - delta*ms - wf - ws)) + gamma*ws,
+		-beta + gamma*ms - b*delta*(mf + 2*ms) + mu + b*(kappa - delta*mf - delta*ms - wf - ws) - mu*xi]]
+		)
+
+	return J
+
 
 ########################################
 # Feedback Control object definitions
@@ -428,6 +483,7 @@ class FeedbackControl(object):
 		self.state_trajectory_set = None
 
 		self.param_convention = ['ws', 'wf', 'ms', 'mf'] # global ordering convention of parameters
+		self.n_species = len(self.param_convention)
 		self.param_convention_map = {}
 		for i, s in enumerate(self.param_convention):
 			self.param_convention_map[s] = i
@@ -448,7 +504,7 @@ class FeedbackControl(object):
 		"""
 		Make a single trajectory of ODE system by numerical integration
 		"""
-		self.state_trajectory = np.nan*np.zeros((int(self.TMAX/self.dt)+1,5)) # preallocate trajectory to nan
+		self.state_trajectory = np.nan*np.zeros((int(self.TMAX/self.dt)+1,self.n_species+1)) # preallocate trajectory to nan
 		
 		# Set up ODE			
 		r = ode(self.network_defn).set_integrator(self.ode_integrator_method, nsteps=self.max_int_steps)
@@ -478,13 +534,46 @@ class FeedbackControl(object):
 			2 : trajectory repetition
 		for random initial conditions
 		"""	
-		self.state_trajectory_set = np.nan*np.zeros((int(self.TMAX/self.dt)+1,5,self.n_traj)) # Tensor of trajectories preallocate to nan
+		self.state_trajectory_set = np.nan*np.zeros((int(self.TMAX/self.dt)+1,self.n_species+1,self.n_traj)) # Tensor of trajectories preallocate to nan
 		for k in range(self.n_traj):
 			print(k)
 			# randomize IC
-			self.initial_state = np.random.uniform(0,self.species_lim, size = 4)
+			self.initial_state = np.random.uniform(0,self.species_lim, size = self.n_species)
 			self.make_trajectory()
 			self.state_trajectory_set[:,:,k] = self.state_trajectory
+
+	def get_h_from_state(self, x, state_includes_time=True):
+		msi = self.param_convention_map['ms']
+		mfi = self.param_convention_map['mf']
+
+		if state_includes_time:
+			return (x[msi+1]+x[mfi+1])/float(np.sum(x[1:]))
+		else:
+			return (x[msi]+x[mfi])/float(np.sum(x))
+
+	def get_fs_from_state(self, x, state_includes_time=True):
+		msi = self.param_convention_map['ms']
+		wsi = self.param_convention_map['ws']
+
+		if state_includes_time:
+			return (x[msi+1]+x[wsi+1])/float(np.sum(x[1:]))
+		else:
+			return (x[msi]+x[wsi])/float(np.sum(x))
+
+	def get_n_from_state(self, x, state_includes_time=True):
+		if state_includes_time:
+			return float(np.sum(x[1:]))
+		else:
+			return float(np.sum(x))
+
+	def get_theta_from_state(self, x, state_includes_time=True):
+		wsi = self.param_convention_map['ws']
+		mfi = self.param_convention_map['mf']
+
+		if state_includes_time:
+			return (x[mfi+1]+x[wsi+1])/float(np.sum(x[1:]))
+		else:
+			return (x[mfi]+x[wsi])/float(np.sum(x))
 
 
 	def add_to_trajectory_plot(self, axs, k):
@@ -731,6 +820,9 @@ class SoluableFeedbackControl(FeedbackControl):
 				axs[1].plot(wsss_space+msss_space,wfss_space+mfss_space,'.r',label='Theory')
 			else:
 				axs[1].plot(wsss_space+msss_space,wfss_space+mfss_space,'-r',label='Theory')
+
+	
+
 
 	
 ##############################################################
