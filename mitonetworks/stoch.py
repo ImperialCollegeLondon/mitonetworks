@@ -288,6 +288,9 @@ class AnalyseDataFeedbackControl(object):
 
 	    return 2*mu/n_sol*t*meanh*(1-meanh)*fsingleton
 
+	def het_var_ansatz_stoch_vars(self,mean_n, mean_fs, mean_h, t, mu):
+	    return 2*mu/mean_n*t*mean_h*(1-mean_h)*mean_fs
+
 	def het_var_ajhg(self,steady_state, tmax, dt, mu):
 	    t = np.linspace(0,tmax,int((tmax+dt)/dt))
 	    ws_sol = steady_state[0]
@@ -299,6 +302,9 @@ class AnalyseDataFeedbackControl(object):
 	    meanh = (mf_sol+ms_sol)/float(n_sol)
 
 	    return 2*mu/n_sol*t*meanh*(1-meanh)
+
+	def het_var_ajhg_stoch_vars(self,mean_n, mean_h, t, mu):
+	    return 2*mu/mean_n*t*mean_h*(1-mean_h)
 
 	def make_gradients(self):
 		"""Compute the gradient of heteroplasmy for every parametrization"""
@@ -509,11 +515,14 @@ class AnalyseDataFeedbackControl(object):
 		dt = stats_data.iloc[1]['t'] - stats_data.iloc[0]['t']
 		mu = params['mu']
 		t = stats_data.t
-		
+
+
 		if self.ansatz_is_ajhg:
 			vh_an = self.het_var_ajhg(steady_state, tmax, dt, mu)
+			vh_an_stoch = self.het_var_ajhg_stoch_vars(stats_data.mean_n, stats_data.mean_h, stats_data.t, mu)
 		else:
 			vh_an = self.het_var_ansatz(steady_state, tmax, dt, mu)
+			vh_an_stoch = self.het_var_ansatz_stoch_vars(stats_data.mean_n,stats_data.mean_fs, stats_data.mean_h, stats_data.t, mu)
 
 
 		fig, axs = plt.subplots(2,2,figsize=(2*5,2*5))
@@ -532,7 +541,8 @@ class AnalyseDataFeedbackControl(object):
 
 		ax = axs[1,0]
 		ax.plot(t,stats_data.var_h,'kx', label='Simulation')
-		ax.plot(t,vh_an,'og',mfc='none', label='Ansatz');
+		ax.plot(t,vh_an,'og',mfc='none', label='Ansatz')
+		#ax.plot(t,vh_an_stoch,'.r',mfc='none', label='Ansatz Stoch');
 		ax.set_xlabel('Time (days)')
 		ax.set_ylabel('Heteroplasmy variance')
 		ax.legend(prop={'size':leg_size})

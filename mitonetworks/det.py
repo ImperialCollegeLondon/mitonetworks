@@ -138,6 +138,8 @@ def E_linear_feedback_control(t, y, params):
 
 	return network_system(ws, wf, ms, mf, gamma, beta, rep_rate, mu, xi, epsilon_pcp=epsilon_pcp)
 
+
+
 def F_production_indep_wt(t, y, params):
 	beta = params['beta']
 	gamma = params['gamma']
@@ -212,6 +214,28 @@ def Y_linear_feedback_deg(t, y, params):
 
 	return network_system(ws, wf, ms, mf, gamma, beta, mu, deg_rate, xi)
 
+def X_general_linear_feedback_control(t, y, params):
+	xi = params['xi']
+	gamma = params['gamma']
+	beta = params['beta']
+	kappa = params['kappa']
+	b = params['b']
+	mu = params['mu']
+	deltas = params['deltas']
+
+	if 'epsilon_pcp' in params:
+		epsilon_pcp = params['epsilon_pcp']
+	else:
+		epsilon_pcp = 1.0
+
+	ws, wf, ms, mf = y
+
+	rep_rate = (mu+b*(kappa-(deltas[0]*ws+deltas[1]*wf+deltas[2]*ms+deltas[3]*mf)))
+
+	if rep_rate < 0:
+		rep_rate = 0
+
+	return network_system(ws, wf, ms, mf, gamma, beta, rep_rate, mu, xi, epsilon_pcp=epsilon_pcp)
 
 #####################################################
 # Deterministic steady states (self.ss_definition)
@@ -662,7 +686,7 @@ class FeedbackControl(object):
 		for extn in self.plotextensions:
 			plt.savefig(self.plotdir+'/'+self.phaseportraitname+'.'+extn)
 
-	def check_h_cons(self, plotname=None):
+	def check_h_cons(self, plotname=None, let_h_small = False):
 		if self.state_trajectory_set is None:
 			raise Exception('state_trajectory_set does not exist. Run FeedbackControl.make_random_trajectories()')
 
@@ -677,7 +701,9 @@ class FeedbackControl(object):
 		fig, ax = plt.subplots(1,1, figsize=(5,5))
 		ax.plot(h_i, h_f-h_i, 'kx')
 
-		ax.set_ylim([-plotting_lim,plotting_lim])
+		if not let_h_small:
+			ax.set_ylim([-plotting_lim,plotting_lim])
+
 		ax.set_xlabel('Initial heteroplasmy')
 		ax.set_ylabel('Final heteroplasmy -\n initial heteroplasmy')
 
