@@ -445,8 +445,8 @@ class AnalyseDataFeedbackControl(object):
 		ax.set_ylabel(ylabel)
 		ax.set_xticks(np.arange(self.n_points));
 		ax.set_yticks(np.arange(self.n_points));
-		ax.set_xticklabels(np.log10(self.mags));
-		ax.set_yticklabels(np.log10(self.rats)[::-1]);
+		ax.set_xticklabels(['%.1f' % x for x in np.log10(self.mags)]);
+		ax.set_yticklabels(['%.1f' % x for x in np.log10(self.rats)[::-1]]);
 
 		if figname is not None:
 			for p in self.plotextensions:
@@ -525,9 +525,10 @@ class AnalyseDataFeedbackControl(object):
 			vh_an_stoch = self.het_var_ansatz_stoch_vars(stats_data.mean_n,stats_data.mean_fs, stats_data.mean_h, stats_data.t, mu)
 
 
-		fig, axs = plt.subplots(2,2,figsize=(2*5,2*5))
+		fig, axs = plt.subplots(1,4,figsize=(4*5,1*5))
+		axs = axs.ravel()
 
-		ax = axs[0,0]
+		ax = axs[0]
 		ax.plot(t,stats_data.mean_h,'kx', label='Simulation')
 		ax.fill_between(t, stats_data.mean_h + 2.0*np.sqrt(stats_data.var_h/stats_data.counts),
 						   stats_data.mean_h - 2.0*np.sqrt(stats_data.var_h/stats_data.counts),
@@ -539,15 +540,15 @@ class AnalyseDataFeedbackControl(object):
 		ax.set_ylabel('Mean heteroplasmy')
 		ax.legend(prop={'size':leg_size})
 
-		ax = axs[1,0]
+		ax = axs[1]
 		ax.plot(t,stats_data.var_h,'kx', label='Simulation')
-		ax.plot(t,vh_an,'og',mfc='none', label='Ansatz')
+		ax.plot(t,vh_an,'-r',mfc='none', label='Ansatz')
 		#ax.plot(t,vh_an_stoch,'.r',mfc='none', label='Ansatz Stoch');
 		ax.set_xlabel('Time (days)')
 		ax.set_ylabel('Heteroplasmy variance')
 		ax.legend(prop={'size':leg_size})
 
-		ax = axs[0,1]
+		ax = axs[2]
 		ax.plot(t,stats_data.mean_n,'kx', label='Simulation')
 		ax.fill_between(t, stats_data.mean_n + 2.0*np.sqrt(stats_data.var_n/stats_data.counts),
 						   stats_data.mean_n - 2.0*np.sqrt(stats_data.var_n/stats_data.counts),
@@ -558,7 +559,7 @@ class AnalyseDataFeedbackControl(object):
 		ax.set_ylabel('Mean copy number')
 		ax.legend(prop={'size':leg_size})
 
-		ax = axs[1,1]
+		ax = axs[3]
 		ax.plot(t,stats_data.var_n,'kx', label='Simulation')
 		ax.set_xlabel('Time (days)')
 		ax.set_ylabel('Copy number variance')
