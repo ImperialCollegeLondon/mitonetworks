@@ -498,9 +498,12 @@ class AnalyseDataFeedbackControl(object):
 	
 
 						
-	def plot_h_n_t(self,param_block, leg_size=10, figname=None):
+	def plot_h_n_t(self,param_block, leg_size=10, figname=None, ylim_mn = None):
 		""" Plot mean/var heteroplasmy/copy number for a particular parametrization
 		:param param_block: An int indicating the parameterization index to be plotted
+		:param leg_size: An int, legend size
+		:param figname: A string to overwrite the figure name
+		:param ylim_mn: A list for the y-limit of mean copy number
 		"""
 
 		stats_data = pd.read_csv(self.dir_data+'/online_stats_{}.csv'.format(param_block))
@@ -529,26 +532,6 @@ class AnalyseDataFeedbackControl(object):
 		axs = axs.ravel()
 
 		ax = axs[0]
-		ax.plot(t,stats_data.mean_h,'kx', label='Simulation')
-		ax.fill_between(t, stats_data.mean_h + 2.0*np.sqrt(stats_data.var_h/stats_data.counts),
-						   stats_data.mean_h - 2.0*np.sqrt(stats_data.var_h/stats_data.counts),
-						   color = 'red',
-						   alpha = 0.3, label = '$\pm2$ SEM')
-		ax.plot(t,h_ss*np.ones(len(t)),'-r',label='Deterministic')
-		ax.plot()
-		ax.set_xlabel('Time (days)')
-		ax.set_ylabel('Mean heteroplasmy')
-		ax.legend(prop={'size':leg_size})
-
-		ax = axs[1]
-		ax.plot(t,stats_data.var_h,'kx', label='Simulation')
-		ax.plot(t,vh_an,'-r',mfc='none', label='Ansatz')
-		#ax.plot(t,vh_an_stoch,'.r',mfc='none', label='Ansatz Stoch');
-		ax.set_xlabel('Time (days)')
-		ax.set_ylabel('Heteroplasmy variance')
-		ax.legend(prop={'size':leg_size})
-
-		ax = axs[2]
 		ax.plot(t,stats_data.mean_n,'kx', label='Simulation')
 		ax.fill_between(t, stats_data.mean_n + 2.0*np.sqrt(stats_data.var_n/stats_data.counts),
 						   stats_data.mean_n - 2.0*np.sqrt(stats_data.var_n/stats_data.counts),
@@ -557,13 +540,36 @@ class AnalyseDataFeedbackControl(object):
 		ax.plot(t,n_ss*np.ones(len(t)),'-r',label='Deterministic')
 		ax.set_xlabel('Time (days)')
 		ax.set_ylabel('Mean copy number')
+		if ylim_mn is not None:
+			ax.set_ylim(ylim_mn)
 		ax.legend(prop={'size':leg_size})
 
-		ax = axs[3]
+		ax = axs[1]
 		ax.plot(t,stats_data.var_n,'kx', label='Simulation')
 		ax.set_xlabel('Time (days)')
 		ax.set_ylabel('Copy number variance')
 		ax.legend(prop={'size':leg_size})
+
+		ax = axs[2]
+		ax.plot(t,stats_data.mean_h,'kx', label='Simulation')
+		ax.fill_between(t, stats_data.mean_h + 2.0*np.sqrt(stats_data.var_h/stats_data.counts),
+						   stats_data.mean_h - 2.0*np.sqrt(stats_data.var_h/stats_data.counts),
+						   color = 'red',
+						   alpha = 0.3, label = '$\pm2$ SEM')
+		ax.plot(t,h_ss*np.ones(len(t)),'-r',label='Deterministic')
+		ax.set_xlabel('Time (days)')
+		ax.set_ylabel('Mean heteroplasmy')
+		ax.legend(prop={'size':leg_size})
+
+		ax = axs[3]
+		ax.plot(t,stats_data.var_h,'kx', label='Simulation')
+		ax.plot(t,vh_an,'-r',mfc='none', label='Ansatz')
+		#ax.plot(t,vh_an_stoch,'.r',mfc='none', label='Ansatz Stoch');
+		ax.set_xlabel('Time (days)')
+		ax.set_ylabel('Heteroplasmy variance')
+		ax.legend(prop={'size':leg_size})
+
+		
 
 		plt.tight_layout()
 
