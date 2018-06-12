@@ -498,12 +498,13 @@ class AnalyseDataFeedbackControl(object):
 	
 
 						
-	def plot_h_n_t(self,param_block, leg_size=10, figname=None, ylim_mn = None):
+	def plot_h_n_t(self,param_block, leg_size=10, figname=None, ylim_mn = None, ylim_mh = None):
 		""" Plot mean/var heteroplasmy/copy number for a particular parametrization
 		:param param_block: An int indicating the parameterization index to be plotted
 		:param leg_size: An int, legend size
 		:param figname: A string to overwrite the figure name
 		:param ylim_mn: A list for the y-limit of mean copy number
+		:param ylim_mh: A list for the y-limit of mean heteroplasmy
 		"""
 
 		stats_data = pd.read_csv(self.dir_data+'/online_stats_{}.csv'.format(param_block))
@@ -542,6 +543,7 @@ class AnalyseDataFeedbackControl(object):
 		ax.set_ylabel('Mean copy number')
 		if ylim_mn is not None:
 			ax.set_ylim(ylim_mn)
+
 		ax.legend(prop={'size':leg_size})
 
 		ax = axs[1]
@@ -559,6 +561,8 @@ class AnalyseDataFeedbackControl(object):
 		ax.plot(t,h_ss*np.ones(len(t)),'-r',label='Deterministic')
 		ax.set_xlabel('Time (days)')
 		ax.set_ylabel('Mean heteroplasmy')
+		if ylim_mh is not None:
+			ax.set_ylim(ylim_mh)
 		ax.legend(prop={'size':leg_size})
 
 		ax = axs[3]
