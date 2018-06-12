@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import matplotlib as mpl
 import os
 import time
-#from pdb import set_trace
+from pdb import set_trace
 
 '''
 parameter ordering convention: ['ws','wf','ms','mf']
@@ -23,6 +23,38 @@ def reset_plots():
 
 def hello_world():
 	print('Hello world!')
+
+def add_arrow(line, position=None, direction='right', size=15, color=None, alpha=0.5):
+		    """
+		    Add an arrow to a line.
+
+		    line:       Line2D object
+		    position:   x-position of the arrow. If None, mean of xdata is taken
+		    direction:  'left' or 'right'
+		    size:       size of the arrow in fontsize points
+		    color:      if None, line color is taken.
+		    """
+		    if color is None:
+		        color = line.get_color()
+
+		    xdata = line.get_xdata()
+		    ydata = line.get_ydata()
+
+		    if position is None:
+		        position = (xdata[-1] + xdata[0])/2		        
+		    # find closest index
+		    start_ind = np.argmin(np.absolute(xdata - position))
+		    if direction == 'right':
+		        end_ind = start_ind + 1
+		    else:
+		        end_ind = start_ind - 1
+
+		    line.axes.annotate('',
+		        xytext=(xdata[start_ind], ydata[start_ind]),
+		        xy=(xdata[end_ind], ydata[end_ind]),
+		        arrowprops=dict(arrowstyle="->", color=color,alpha=alpha),
+		        size=size
+		    )
 
 #######################
 # Feedback controls 
@@ -649,6 +681,7 @@ class FeedbackControl(object):
 			ax.plot(t_sol, ws_sol + ms_sol + wf_sol + mf_sol, '-b', alpha = 0.2)
 			ax.plot(t_sol[0], ws_init + ms_init + wf_init + mf_init, '.b', alpha = 0.2)
 			ax.plot(t_final, ws_final + ms_final + wf_final + mf_final, 'sk', alpha = 0.2)
+	
 
 	def make_trajetory_plot(self):
 		"""
@@ -754,7 +787,7 @@ class SoluableFeedbackControl(FeedbackControl):
 
 		self.min_state = np.array([self.state_trajectory_set[-1,i+1,:].min() for i in range(4)]) 
 		self.max_state = np.array([self.state_trajectory_set[-1,i+1,:].max() for i in range(4)]) 
-
+	
 	
 	def add_to_trajectory_plot(self, axs, k):
 		"""
@@ -765,6 +798,7 @@ class SoluableFeedbackControl(FeedbackControl):
 		"""
 		if self.state_trajectory_set is None:
 			raise Exception('state_trajectory_set does not exist. Run FeedbackControl.make_random_trajectories()')
+		
 
 		final_state = self.state_trajectory_set[-1,:,k]
 		init_state = self.state_trajectory_set[0,:,k]
@@ -781,14 +815,17 @@ class SoluableFeedbackControl(FeedbackControl):
 
 		if k == 0:
 			ax = axs[0]		
-			ax.plot(ws_sol + wf_sol, ms_sol + mf_sol, '-b', alpha = 0.2, label = 'Trajectory')
+			l=ax.plot(ws_sol + wf_sol, ms_sol + mf_sol, '-b', alpha = 0.2, label = 'Trajectory')
 			ax.plot(ws_init + wf_init, ms_init + mf_init, '.b', alpha = 0.2, label = 'Initial condition')
 			ax.plot(ws_final + wf_final, ms_final + mf_final, 'sk', alpha = 0.2, label = 'Final condition')
+			add_arrow(l[0])
+
 
 			ax = axs[1]
-			ax.plot(ws_sol + ms_sol, wf_sol + mf_sol, '-b', alpha = 0.2, label = 'Trajectory')
+			l=ax.plot(ws_sol + ms_sol, wf_sol + mf_sol, '-b', alpha = 0.2, label = 'Trajectory')
 			ax.plot(ws_init + ms_init, wf_init + mf_init, '.b', alpha = 0.2, label = 'Initial condition')
 			ax.plot(ws_final + ms_final, wf_final + mf_final, 'sk', alpha = 0.2, label = 'Final condition')
+			add_arrow(l[0])
 
 			ax = axs[2]
 			ax.plot(t_sol, ws_sol + ms_sol + wf_sol + mf_sol, '-b', alpha = 0.2, label = 'Trajectory')
@@ -798,14 +835,16 @@ class SoluableFeedbackControl(FeedbackControl):
 			ax.plot(t_final, n_det_ss, 'xr', alpha = 0.5, label = 'Final condition theory')
 		else:
 			ax = axs[0]		
-			ax.plot(ws_sol + wf_sol, ms_sol + mf_sol, '-b', alpha = 0.2)
+			l=ax.plot(ws_sol + wf_sol, ms_sol + mf_sol, '-b', alpha = 0.2)
 			ax.plot(ws_final + wf_final, ms_final + mf_final, 'sk', alpha = 0.2)
 			ax.plot(ws_init + wf_init, ms_init + mf_init, '.b', alpha = 0.2)
+			add_arrow(l[0])
 
 			ax = axs[1]
-			ax.plot(ws_sol + ms_sol, wf_sol + mf_sol, '-b', alpha = 0.2)
+			l=ax.plot(ws_sol + ms_sol, wf_sol + mf_sol, '-b', alpha = 0.2)
 			ax.plot(ws_final + ms_final, wf_final + mf_final, 'sk', alpha = 0.2)
 			ax.plot(ws_init + ms_init, wf_init + mf_init, '.b', alpha = 0.2)
+			add_arrow(l[0])
 
 			ax = axs[2]
 			ax.plot(t_sol, ws_sol + ms_sol + wf_sol + mf_sol, '-b', alpha = 0.2)
