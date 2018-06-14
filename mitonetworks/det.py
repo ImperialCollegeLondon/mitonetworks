@@ -60,12 +60,12 @@ def add_arrow(line, position=None, direction='right', size=15, color=None, alpha
 # Feedback controls 
 #######################
 
-def network_system(ws, wf, ms, mf, gamma, beta, rep_rate, degrate, xi, epsilon_pcp=1.0):
-	wsdot = -1.0 * gamma * ws * ws - gamma * ws * wf + beta * wf - rep_rate * ws - degrate * ws - epsilon_pcp * gamma * mf * ws - epsilon_pcp * gamma * ws * ms
-	msdot = -1.0 * gamma * ms * ms - gamma * ms * mf + beta * mf - rep_rate * ms - degrate * ms  - epsilon_pcp * gamma * wf * ms - epsilon_pcp * gamma * ws * ms
+def network_system(ws, wf, ms, mf, gamma, beta, rep_rate, degrate, xi, epsilon_pcp=1.0, Q_f=1.0):
+	wsdot = -1.0 * gamma * ws * ws - gamma * ws * wf + beta * wf - rep_rate * ws - degrate * ws - epsilon_pcp * gamma*Q_f * mf * ws - epsilon_pcp * gamma * ws * ms
+	msdot = -1.0 * gamma*Q_f * ms * ms - gamma*Q_f * ms * mf + beta * mf - rep_rate * ms - degrate * ms  - epsilon_pcp * gamma*Q_f * wf * ms - epsilon_pcp * gamma * ws * ms
 
-	wfdot = 1.0 * gamma * ws * ws + gamma * ws * wf - beta * wf + rep_rate * (2.0*ws + wf) - xi * degrate * wf + epsilon_pcp * gamma * mf * ws + epsilon_pcp * gamma * ws * ms
-	mfdot = 1.0 * gamma * ms * ms + gamma * ms * mf - beta * mf + rep_rate * (2.0*ms + mf) - xi * degrate * mf + epsilon_pcp * gamma * wf * ms + epsilon_pcp * gamma * ws * ms
+	wfdot = 1.0 * gamma * ws * ws + gamma * ws * wf - beta * wf + rep_rate * (2.0*ws + wf) - xi * degrate * wf + epsilon_pcp * gamma*Q_f * mf * ws + epsilon_pcp * gamma * ws * ms
+	mfdot = 1.0 * gamma*Q_f * ms * ms + gamma*Q_f * ms * mf - beta * mf + rep_rate * (2.0*ms + mf) - xi * degrate * mf + epsilon_pcp * gamma*Q_f * wf * ms + epsilon_pcp * gamma * ws * ms
 
 	return [wsdot, wfdot, msdot, mfdot]
 
@@ -157,6 +157,10 @@ def E_linear_feedback_control(t, y, params):
 		epsilon_pcp = params['epsilon_pcp']
 	else:
 		epsilon_pcp = 1.0
+	if 'Q_f' in params:
+		Q_f = params['Q_f']
+	else:
+		Q_f = 1.0
 
 	ws, wf, ms, mf = y
 
@@ -168,7 +172,7 @@ def E_linear_feedback_control(t, y, params):
 	if rep_rate < 0:
 		rep_rate = 0
 
-	return network_system(ws, wf, ms, mf, gamma, beta, rep_rate, mu, xi, epsilon_pcp=epsilon_pcp)
+	return network_system(ws, wf, ms, mf, gamma, beta, rep_rate, mu, xi, epsilon_pcp=epsilon_pcp, Q_f=Q_f)
 
 
 
