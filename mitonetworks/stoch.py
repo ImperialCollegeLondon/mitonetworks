@@ -8,7 +8,7 @@ import functools
 from matplotlib import cm
 from ipywidgets import interact
 
-#from pdb import set_trace
+from pdb import set_trace
 
 def reset_plots():
 	plt.close('all')
@@ -574,6 +574,58 @@ class AnalyseDataFeedbackControl(object):
 		ax.legend(prop={'size':leg_size})
 
 		
+
+		plt.tight_layout()
+
+		if figname is not None:
+			for p in self.plotextensions:
+				plt.savefig(self.out_dir+'/'+self.ctrl_name+'_'+figname+'_'+str(param_block)+'.'+p, bbox_inches='tight')
+
+	def plot_vh_param_sw(self,param_blocks, leg_list, leg_size=10, figname=None, plot_legend=True, plot_labels=True):
+		""" Plot heteroplasmy variance for a set of parametriations
+		:param param_block: A list of ints indicating the parameterization indices to be plotted
+		:param leg_pattern: A list of strings for the legend
+		:param leg_list: An int, legend size
+		:param figname: A string to overwrite the figure name	
+		:param plot_legend: Bool, plot the legend?	
+		:param plot_labels: Bool, plot the x/y labels?
+		"""
+		cm = plt.get_cmap("brg")
+		colors = (0.5+np.arange(0,len(param_blocks)))/float(len(param_blocks))
+		cvals = cm(colors)
+		symbols = ['d','o','s','^','h','P']
+
+		handles = []
+
+		fig, ax = plt.subplots(1,1,figsize=(1*5,1*5))
+
+		for i, param_block in enumerate(param_blocks):	
+
+			symbol = symbols[np.mod(i,len(symbols))]
+
+			stats_data = pd.read_csv(self.dir_data+'/online_stats_{}.csv'.format(param_block))
+			params = dict(self.df_params.iloc[param_block])
+			steady_state = [params['ws_init'],params['wf_init'],params['ms_init'],params['mf_init']]			
+		
+			tmax = stats_data.iloc[-1]['t']
+			dt = stats_data.iloc[1]['t'] - stats_data.iloc[0]['t']
+			mu = params['mu']
+			t = stats_data.t
+
+			if self.ansatz_is_ajhg:
+				vh_an = self.het_var_ajhg(steady_state, tmax, dt, mu)			
+			else:
+				vh_an = self.het_var_ansatz(steady_state, tmax, dt, mu)			
+
+			l=ax.plot(t,stats_data['var_h'],symbol,color=cvals[i], alpha = 0.4)
+			ax.plot(t,vh_an,'-',color=cvals[i])
+			handles.append(l[0])
+			
+		if plot_labels:
+			ax.set_xlabel('Time (days)')
+			ax.set_ylabel('Heteroplasmy variance')
+		if plot_legend:
+			ax.legend(handles,leg_list,prop={'size':leg_size})
 
 		plt.tight_layout()
 
