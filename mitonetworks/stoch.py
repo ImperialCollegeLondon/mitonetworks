@@ -581,7 +581,8 @@ class AnalyseDataFeedbackControl(object):
 			for p in self.plotextensions:
 				plt.savefig(self.out_dir+'/'+self.ctrl_name+'_'+figname+'_'+str(param_block)+'.'+p, bbox_inches='tight')
 
-	def plot_vh_param_sw(self,param_blocks, leg_list, leg_size=10, figname=None, plot_legend=True, plot_labels=True):
+	def plot_vh_param_sw(self,param_blocks, leg_list, leg_size=10, figname=None, plot_legend=True, plot_labels=True,
+	 sparsify_data = True):
 		""" Plot heteroplasmy variance for a set of parametriations
 		:param param_block: A list of ints indicating the parameterization indices to be plotted
 		:param leg_pattern: A list of strings for the legend
@@ -592,7 +593,7 @@ class AnalyseDataFeedbackControl(object):
 		"""
 		cm = plt.get_cmap("brg")
 		colors = (0.5+np.arange(0,len(param_blocks)))/float(len(param_blocks))
-		cvals = cm(colors)
+		cvals = cm(colors)[::-1]
 		symbols = ['d','o','s','^','h','P']
 
 		handles = []
@@ -616,9 +617,14 @@ class AnalyseDataFeedbackControl(object):
 				vh_an = self.het_var_ajhg(steady_state, tmax, dt, mu)			
 			else:
 				vh_an = self.het_var_ansatz(steady_state, tmax, dt, mu)			
-
-			l=ax.plot(t,stats_data['var_h'],symbol,color=cvals[i], alpha = 0.4)
+			if sparsify_data:
+				l=ax.plot(t[::4],stats_data['var_h'][::4],symbol,color=cvals[i], alpha = 0.4)
+			else:
+				l=ax.plot(t,stats_data['var_h'],symbol,color=cvals[i], alpha = 0.4)
+			
 			ax.plot(t,vh_an,'-',color=cvals[i])
+
+
 			handles.append(l[0])
 			
 		if plot_labels:

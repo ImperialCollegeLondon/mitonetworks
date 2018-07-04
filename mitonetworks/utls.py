@@ -17,6 +17,24 @@ def reset_plots():
 	plt.rcParams.update({'axes.labelsize': fontsize})
 	mpl.rcParams['text.latex.preamble'] = [r'\usepackage{amsmath}', r'\usepackage{amsfonts}']
 
+def reset_plots2():	
+    plt.close('all')
+    fontsize = 20
+    legsize = 15
+    plt.rc('font',**{'family':'sans-serif','sans-serif':['Helvetica']})
+    plt.rc('text', usetex=True)
+    font = {'size' : fontsize}
+    plt.rc('font', **font)
+    rc={'axes.labelsize': fontsize, 
+    'font.size': fontsize, 
+    'axes.titlesize': fontsize, 
+    'xtick.labelsize':fontsize, 
+    'ytick.labelsize':fontsize,
+    'legend.fontsize': legsize}
+    mpl.rcParams.update(**rc)
+    mpl.rc('lines', markersize=10)
+    plt.rcParams.update({'axes.labelsize': fontsize})
+    mpl.rcParams['text.latex.preamble'] = [r'\usepackage{amsmath}'] 
 
 ####################################################################
 # Useful plots
