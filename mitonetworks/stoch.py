@@ -250,6 +250,7 @@ class AnalyseDataFeedbackControl(object):
 	:param colorbar_heatmap: A matplotlib colormap, for heatmaps
 	:param plotextensions: A list of strings, extensions for heatmaps
 	:param ansatz_is_ajhg: A bool, if true use AJHG as ansatz, otherwise use network ansatz
+	:param use_xi_ansatz: A bool, if true use the ansatz which depends on xi (the fused degradation relative propensity)
 	"""
 	def __init__(self, dir_df_params, dir_data, ctrl_name,
 		out_dir=getcwd(),
@@ -257,6 +258,7 @@ class AnalyseDataFeedbackControl(object):
 		nan_col = 0.4, colorbar_heatmap=cm.jet, plotextensions = ['svg','png'],
 		istransposed=False,
 		ansatz_is_ajhg=False,
+		use_xi_ansatz=False,
 		):
 		self.df_params = pd.read_csv(dir_df_params)
 		self.dir_data = dir_data
@@ -273,6 +275,11 @@ class AnalyseDataFeedbackControl(object):
 		self.colorbar_heatmap = colorbar_heatmap
 		self.plotextensions = plotextensions
 		self.ansatz_is_ajhg = ansatz_is_ajhg
+		self.use_xi_ansatz = use_xi_ansatz
+
+		if ansatz_is_ajhg and use_xi_ansatz:
+			raise Exception('Cannot use both AJHG and xi ansatz')
+
 
 
 	def het_var_ansatz(self,steady_state, tmax, dt, mu):
@@ -306,6 +313,20 @@ class AnalyseDataFeedbackControl(object):
 	def het_var_ajhg_stoch_vars(self,mean_n, mean_h, t, mu):
 	    return 2*mu/mean_n*t*mean_h*(1-mean_h)
 
+	def het_var_ansatz_xi(self, steady_state, tmax, dt, mu, xi):
+	    t = np.linspace(0,tmax,int((tmax+dt)/dt))
+	    ws_sol = steady_state[0]
+	    wf_sol = steady_state[1]
+	    ms_sol = steady_state[2]
+	    mf_sol = steady_state[3]
+
+	    n_sol = ws_sol + wf_sol + ms_sol + mf_sol
+	    meanh = (mf_sol+ms_sol)/float(n_sol)
+	    fsingleton = (ws_sol + ms_sol)/float(n_sol)
+
+	    return 2*mu/n_sol*t*meanh*(1-meanh)*(fsingleton + xi*(1.0-fsingleton))
+
+
 	def make_gradients(self):
 		"""Compute the gradient of heteroplasmy for every parametrization"""
 		
@@ -330,6 +351,8 @@ class AnalyseDataFeedbackControl(object):
 				ss_vals.append(vals[p+'_init']) # simulations are initialised at deterministic steady state
 			if self.ansatz_is_ajhg:
 				vh_ansatz = self.het_var_ajhg(ss_vals, TFinal, dt, vals['mu']) # heteroplasmy variance ansatz
+			elif self.use_xi_ansatz:
+				vh_ansatz = self.het_var_ansatz_xi(ss_vals, TFinal, dt, vals['mu'], vals['xi']) # heteroplasmy variance ansatz
 			else:
 				vh_ansatz = self.het_var_ansatz(ss_vals, TFinal, dt, vals['mu']) # heteroplasmy variance ansatz
 
@@ -523,10 +546,12 @@ class AnalyseDataFeedbackControl(object):
 
 		if self.ansatz_is_ajhg:
 			vh_an = self.het_var_ajhg(steady_state, tmax, dt, mu)
-			vh_an_stoch = self.het_var_ajhg_stoch_vars(stats_data.mean_n, stats_data.mean_h, stats_data.t, mu)
+			#vh_an_stoch = self.het_var_ajhg_stoch_vars(stats_data.mean_n, stats_data.mean_h, stats_data.t, mu)
+		elif self.use_xi_ansatz:
+			vh_an = self.het_var_ansatz_xi(steady_state, tmax, dt, mu, params['xi'])
 		else:
 			vh_an = self.het_var_ansatz(steady_state, tmax, dt, mu)
-			vh_an_stoch = self.het_var_ansatz_stoch_vars(stats_data.mean_n,stats_data.mean_fs, stats_data.mean_h, stats_data.t, mu)
+			#vh_an_stoch = self.het_var_ansatz_stoch_vars(stats_data.mean_n,stats_data.mean_fs, stats_data.mean_h, stats_data.t, mu)
 
 
 		fig, axs = plt.subplots(1,4,figsize=(4*5,1*5))
@@ -582,7 +607,7 @@ class AnalyseDataFeedbackControl(object):
 				plt.savefig(self.out_dir+'/'+self.ctrl_name+'_'+figname+'_'+str(param_block)+'.'+p, bbox_inches='tight')
 
 	def plot_vh_param_sw(self,param_blocks, leg_list, leg_size=10, figname=None, plot_legend=True, plot_labels=True,
-	 sparsify_data = True):
+	 sparsify_data = True, leg_title = None, leg_fontsize = None):
 		""" Plot heteroplasmy variance for a set of parametriations
 		:param param_block: A list of ints indicating the parameterization indices to be plotted
 		:param leg_pattern: A list of strings for the legend
@@ -590,6 +615,7 @@ class AnalyseDataFeedbackControl(object):
 		:param figname: A string to overwrite the figure name	
 		:param plot_legend: Bool, plot the legend?	
 		:param plot_labels: Bool, plot the x/y labels?
+		:param leg_title: A string, legend title
 		"""
 		cm = plt.get_cmap("brg")
 		colors = (0.5+np.arange(0,len(param_blocks)))/float(len(param_blocks))
@@ -614,9 +640,12 @@ class AnalyseDataFeedbackControl(object):
 			t = stats_data.t
 
 			if self.ansatz_is_ajhg:
-				vh_an = self.het_var_ajhg(steady_state, tmax, dt, mu)			
+				vh_an = self.het_var_ajhg(steady_state, tmax, dt, mu)
+			elif self.use_xi_ansatz:
+				vh_an = self.het_var_ansatz_xi(steady_state, tmax, dt, mu, params['xi'])		
 			else:
-				vh_an = self.het_var_ansatz(steady_state, tmax, dt, mu)			
+				vh_an = self.het_var_ansatz(steady_state, tmax, dt, mu)	
+
 			if sparsify_data:
 				l=ax.plot(t[::4],stats_data['var_h'][::4],symbol,color=cvals[i], alpha = 0.4)
 			else:
@@ -631,7 +660,11 @@ class AnalyseDataFeedbackControl(object):
 			ax.set_xlabel('Time (days)')
 			ax.set_ylabel('Heteroplasmy variance')
 		if plot_legend:
-			ax.legend(handles,leg_list,prop={'size':leg_size})
+			if leg_title is not None:
+				legend=ax.legend(handles,leg_list,title=leg_title,prop={'size':leg_size})
+				plt.setp(legend.get_title(),fontsize=leg_fontsize)
+			else:
+				ax.legend(handles,leg_list,prop={'size':leg_size})
 
 		plt.tight_layout()
 
