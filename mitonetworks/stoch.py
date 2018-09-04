@@ -8,6 +8,9 @@ import functools
 from matplotlib import cm
 from ipywidgets import interact
 
+import matplotlib.ticker
+from matplotlib.ticker import FormatStrFormatter
+
 from pdb import set_trace
 
 def reset_plots():
@@ -521,7 +524,7 @@ class AnalyseDataFeedbackControl(object):
 	
 
 						
-	def plot_h_n_t(self,param_block, leg_size=10, figname=None, ylim_mn = None, ylim_mh = None,
+	def plot_h_n_t(self,param_block, leg_size=15, figname=None, ylim_mn = None, ylim_mh = None,
 		mh_errorbars = False):
 		""" Plot mean/var heteroplasmy/copy number for a particular parametrization
 		:param param_block: An int indicating the parameterization index to be plotted
@@ -560,11 +563,11 @@ class AnalyseDataFeedbackControl(object):
 		axs = axs.ravel()
 
 		ax = axs[0]
-		ax.plot(t,stats_data.mean_n,'kx', label='Simulation')
 		ax.fill_between(t, stats_data.mean_n + 2.0*np.sqrt(stats_data.var_n/stats_data.counts),
 						   stats_data.mean_n - 2.0*np.sqrt(stats_data.var_n/stats_data.counts),
 						   color = 'red',
-						   alpha = 0.3, label = '$\pm2$ SEM')
+						   alpha = 0.3, label = '$\pm$ 2 SEM')
+		ax.plot(t[::5],stats_data.mean_n[::5],'bs', label='Simulation',alpha=0.5)
 		ax.plot(t,n_ss*np.ones(len(t)),'-r',label='Deterministic')
 		ax.set_xlabel('Time (days)')
 		ax.set_ylabel('Mean copy number')
@@ -574,36 +577,47 @@ class AnalyseDataFeedbackControl(object):
 		ax.legend(prop={'size':leg_size})
 
 		ax = axs[1]
-		ax.plot(t,stats_data.var_n,'kx', label='Simulation')
+		ax.plot(t[::5],stats_data.var_n[::5],'bs', label='Simulation',alpha=0.5)
 		ax.set_xlabel('Time (days)')
 		ax.set_ylabel('Copy number variance')
-		ax.legend(prop={'size':leg_size})
+		ax.legend(prop={'size':leg_size},loc="lower right")
 
 		ax = axs[2]
 		if mh_errorbars == True:
-			ax.errorbar(t[::5], stats_data.mean_h[::5], yerr = 2.0*np.sqrt(stats_data.var_h/stats_data.counts)[::5],
-				fmt = 'kx', label = 'Mean $\pm2$ SEM')
+			ax.errorbar(t[::5], stats_data.mean_h[::5], yerr = 2.0*np.sqrt(stats_data.var_h/stats_data.counts)[::5],elinewidth=3,
+				fmt = 'bs', label = 'Mean $\pm$ 2 SEM', alpha = 0.5)
 		else:
 			ax.plot(t,stats_data.mean_h,'kx', label='Simulation')
 			ax.fill_between(t, stats_data.mean_h + 2.0*np.sqrt(stats_data.var_h/stats_data.counts),
 							   stats_data.mean_h - 2.0*np.sqrt(stats_data.var_h/stats_data.counts),
 							   color = 'red',
-							   alpha = 0.3, label = '$\pm2$ SEM')
+							   alpha = 0.3, label = '$\pm$ 2 SEM')
 		ax.plot(t,h_ss*np.ones(len(t)),'-r',label='Deterministic')
 		ax.set_xlabel('Time (days)')
 		ax.set_ylabel('Mean heteroplasmy')
 		if ylim_mh is not None:
 			ax.set_ylim(ylim_mh)
-		ax.legend(prop={'size':leg_size})
+		ax.legend(prop={'size':leg_size},loc="upper left")
 
 		ax = axs[3]
 		ax.plot(t,stats_data.var_h,'kx', label='Simulation')
 		ax.plot(t,vh_an,'-r',mfc='none', label='Ansatz')
-		#ax.plot(t,vh_an_stoch,'.r',mfc='none', label='Ansatz Stoch');
 		ax.set_xlabel('Time (days)')
 		ax.set_ylabel('Heteroplasmy variance')
-		ax.legend(prop={'size':leg_size})
+		ax.legend(prop={'size':leg_size},loc="upper left")
 
+		#Make it look fancy
+		fmt = matplotlib.ticker.StrMethodFormatter("{x}")
+		for i, ax in enumerate(axs):
+			ax.xaxis.set_major_formatter(fmt)
+			ax.yaxis.set_major_formatter(fmt) 
+			ax.xaxis.set_major_formatter(FormatStrFormatter('%d'))   
+			if i == 2:
+				ax.yaxis.set_major_formatter(FormatStrFormatter('%.4f')) 
+			elif i == 3:
+				ax.yaxis.set_major_formatter(FormatStrFormatter('%.2f')) 			  				
+			else:
+				ax.yaxis.set_major_formatter(FormatStrFormatter('%d'))   
 		
 
 		plt.tight_layout()
@@ -612,8 +626,8 @@ class AnalyseDataFeedbackControl(object):
 			for p in self.plotextensions:
 				plt.savefig(self.out_dir+'/'+self.ctrl_name+'_'+figname+'_'+str(param_block)+'.'+p, bbox_inches='tight')
 
-	def plot_vh_param_sw(self,param_blocks, leg_list, leg_size=10, figname=None, plot_legend=True, plot_labels=True,
-	 sparsify_data = True, leg_title = None, leg_fontsize = None):
+	def plot_vh_param_sw(self,param_blocks, leg_list, leg_size=15, figname=None, plot_legend=True, plot_labels=True,
+	 sparsify_data = True, leg_title = None, leg_fontsize = None, y_dp = None):
 		""" Plot heteroplasmy variance for a set of parametriations
 		:param param_block: A list of ints indicating the parameterization indices to be plotted
 		:param leg_pattern: A list of strings for the legend
@@ -622,6 +636,7 @@ class AnalyseDataFeedbackControl(object):
 		:param plot_legend: Bool, plot the legend?	
 		:param plot_labels: Bool, plot the x/y labels?
 		:param leg_title: A string, legend title
+		:param y_dp: An int, number of decimal places for y-axis
 		"""
 		cm = plt.get_cmap("brg")
 		colors = (0.5+np.arange(0,len(param_blocks)))/float(len(param_blocks))
@@ -658,10 +673,8 @@ class AnalyseDataFeedbackControl(object):
 				l=ax.plot(t,stats_data['var_h'],symbol,color=cvals[i], alpha = 0.4)
 			
 			ax.plot(t,vh_an,'-',color=cvals[i])
-
-
 			handles.append(l[0])
-			
+
 		if plot_labels:
 			ax.set_xlabel('Time (days)')
 			ax.set_ylabel('Heteroplasmy variance')
@@ -671,6 +684,14 @@ class AnalyseDataFeedbackControl(object):
 				plt.setp(legend.get_title(),fontsize=leg_fontsize)
 			else:
 				ax.legend(handles,leg_list,prop={'size':leg_size})
+		
+		#Make it look fancy
+		fmt = matplotlib.ticker.StrMethodFormatter("{x}")
+		ax.xaxis.set_major_formatter(fmt)
+		ax.yaxis.set_major_formatter(fmt) 
+		ax.xaxis.set_major_formatter(FormatStrFormatter('%d')) 
+		if y_dp is not None:  			
+			ax.yaxis.set_major_formatter(FormatStrFormatter('%.{}f'.format(y_dp))) 
 
 		plt.tight_layout()
 

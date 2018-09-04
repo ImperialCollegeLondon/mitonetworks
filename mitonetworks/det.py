@@ -6,6 +6,10 @@ import os
 import time
 from pdb import set_trace
 
+import matplotlib.ticker
+from matplotlib.ticker import FormatStrFormatter
+
+
 '''
 parameter ordering convention: ['ws','wf','ms','mf']
 '''
@@ -697,6 +701,9 @@ class FeedbackControl(object):
 		if self.state_trajectory_set is None:
 			raise Exception('state_trajectory_set does not exist. Run FeedbackControl.make_random_trajectories()')
 
+		
+
+		
 		fig, axs = plt.subplots(1,3, figsize = (15,5))
 		axs = axs.ravel()		
 
@@ -714,9 +721,17 @@ class FeedbackControl(object):
 		ax.legend(prop = {'size':10})
 
 		ax = axs[2]
-		ax.set_xlabel('Time (d)')
+		ax.set_xlabel('Time (days)')
 		ax.set_ylabel('Total copy number')
-		ax.legend(prop = {'size':10})    
+		ax.legend(prop = {'size':10})
+
+		# Make it look fancy
+		fmt = matplotlib.ticker.StrMethodFormatter("{x}")
+		for ax in axs:
+			ax.xaxis.set_major_formatter(fmt)
+			ax.yaxis.set_major_formatter(fmt) 
+			ax.xaxis.set_major_formatter(FormatStrFormatter('%d'))   
+			ax.yaxis.set_major_formatter(FormatStrFormatter('%d'))   
 
 		plt.tight_layout()
 
