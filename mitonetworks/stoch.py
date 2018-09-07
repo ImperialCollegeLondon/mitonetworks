@@ -615,7 +615,7 @@ class AnalyseDataFeedbackControl(object):
 			if i == 2:
 				ax.yaxis.set_major_formatter(FormatStrFormatter('%.4f')) 
 			elif i == 3:
-				ax.yaxis.set_major_formatter(FormatStrFormatter('%.2f')) 			  				
+				ax.yaxis.set_major_formatter(FormatStrFormatter('%.3f')) 			  				
 			else:
 				ax.yaxis.set_major_formatter(FormatStrFormatter('%d'))   
 		
