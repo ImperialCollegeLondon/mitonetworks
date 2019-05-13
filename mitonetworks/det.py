@@ -1,5 +1,5 @@
 import numpy as np
-from scipy.integrate import ode 
+from scipy.integrate import ode
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 import os
@@ -45,7 +45,7 @@ def add_arrow(line, position=None, direction='right', size=15, color=None, alpha
 		    ydata = line.get_ydata()
 
 		    if position is None:
-		        position = (xdata[-1] + xdata[0])/2		        
+		        position = (xdata[-1] + xdata[0])/2
 		    # find closest index
 		    start_ind = np.argmin(np.absolute(xdata - position))
 		    if direction == 'right':
@@ -61,7 +61,7 @@ def add_arrow(line, position=None, direction='right', size=15, color=None, alpha
 		    )
 
 #######################
-# Feedback controls 
+# Feedback controls
 #######################
 
 def network_system(ws, wf, ms, mf, gamma, beta, rep_rate, degrate, xi, epsilon_pcp=1.0, Q_f=1.0):
@@ -73,7 +73,7 @@ def network_system(ws, wf, ms, mf, gamma, beta, rep_rate, degrate, xi, epsilon_p
 
 	return [wsdot, wfdot, msdot, mfdot]
 
-def A_relaxed_replication(t, y, params):    
+def A_relaxed_replication(t, y, params):
 	beta = params['beta']
 	gamma = params['gamma']
 	xi = params['xi']
@@ -95,7 +95,7 @@ def A_relaxed_replication(t, y, params):
 	return network_system(ws, wf, ms, mf, gamma, beta, rep_rate, mu, xi)
 
 
-def B_differential_control(t, y, params):    
+def B_differential_control(t, y, params):
     beta = params['beta']
     gamma = params['gamma']
     xi = params['xi']
@@ -111,7 +111,7 @@ def B_differential_control(t, y, params):
     rep_rate = alpha*(w_opt - w)
 
     if rep_rate < 0:
-		rep_rate = 0
+	    rep_rate = 0
 
     return network_system(ws, wf, ms, mf, gamma, beta, rep_rate, mu, xi)
 
@@ -212,7 +212,7 @@ def G_ratiometric_deg(t, y, params):
 
 	return network_system(ws, wf, ms, mf, gamma, beta, mu, deg_rate, xi)
 
-def Z_differential_deg(t, y, params):    
+def Z_differential_deg(t, y, params):
 	beta = params['beta']
 	gamma = params['gamma']
 	xi = params['xi']
@@ -232,7 +232,7 @@ def Z_differential_deg(t, y, params):
 
 	return network_system(ws, wf, ms, mf, gamma, beta, mu, deg_rate, xi)
 
-def Y_linear_feedback_deg(t, y, params):    
+def Y_linear_feedback_deg(t, y, params):
 	xi = params['xi']
 	gamma = params['gamma']
 	beta = params['beta']
@@ -283,7 +283,7 @@ def X_general_linear_feedback_control(t, y, params):
 
 """
 These must be of the form:
-	
+
 	def ss_definition(ss_indep_variable, params):
 		#... definition ...
 		return ws, wf, ms, mf
@@ -305,7 +305,7 @@ def B_differential_control_ss(ws, params):
 		alpha*w_opt*(-beta - mu + mu*xi + np.sqrt(alpha**2*w_opt**2 - 2*alpha*mu*w_opt*xi + mu*(4*alpha*ws*(-1 + xi) + mu*xi**2))) +\
 		mu*(2*alpha*ws - 2*gamma*ws + mu*xi - 2*alpha*ws*xi + 2*gamma*ws*xi +\
 		np.sqrt(alpha**2*w_opt**2 - 2*alpha*mu*w_opt*xi + mu*(4*alpha*ws*(-1 + xi) + mu*xi**2)))))/(4.*alpha*gamma*mu*ws*(-1 + xi))
-	ms = (-2*beta*mu + alpha*beta*w_opt + alpha*mu*w_opt + alpha**2*w_opt**2 - 2*alpha*mu*ws + 2*gamma*mu*ws + beta*mu*xi - mu**2*xi - 
+	ms = (-2*beta*mu + alpha*beta*w_opt + alpha*mu*w_opt + alpha**2*w_opt**2 - 2*alpha*mu*ws + 2*gamma*mu*ws + beta*mu*xi - mu**2*xi -
 		alpha*mu*w_opt*xi + 2*alpha*mu*ws*xi - 2*gamma*mu*ws*xi -\
 		(beta + mu + alpha*w_opt)*np.sqrt(alpha**2*w_opt**2 - 2*alpha*mu*w_opt*xi + mu*(4*alpha*ws*(-1 + xi) + mu*xi**2)))/\
 		(2.*gamma*mu*(-1 + xi))
@@ -351,7 +351,7 @@ def E_linear_feedback_control_ss(ms, params):
 
 	x1 = np.sqrt(gamma**2*mu**2*(-1 + xi)**2 - 2*b*gamma*mu*(-1 + xi)*(-beta + gamma*kappa - 2*(-1 + delta)*gamma*ms + mu + mu*xi) + \
         b**2*(beta**2 - 4*(-1 + delta)*gamma*ms*mu*(-1 + xi) + 2*beta*(gamma*kappa + 3*mu - mu*xi) + (gamma*kappa + mu + mu*xi)**2))
-	
+
 	wf = ((beta*x1)/(b*gamma*(beta + (-1 + delta)*gamma*ms)) - (ms*x1)/(b*(beta + (-1 + delta)*gamma*ms)) - \
          (gamma*(beta + gamma*kappa + 2*mu)**2)/((b - gamma)**2*mu*(-1 + xi)) + (2*x1)/((b - gamma)**2*(-1 + xi)) + \
          x1/((b - gamma)*gamma*(-1 + xi)) + (beta*x1)/((b - gamma)**2*mu*(-1 + xi)) + (kappa*x1)/((b - gamma)*mu*(-1 + xi)) + \
@@ -362,7 +362,7 @@ def E_linear_feedback_control_ss(ms, params):
          (beta*kappa*(beta + gamma*kappa - mu*(-3 + xi)) - 2*(-1 + delta)*delta*gamma*ms**2*mu*(-1 + xi) + \
             ms*((-1 + delta)*gamma**2*kappa**2 + beta*((-1 + delta)*gamma*kappa - delta*mu*(-1 + xi)) + \
                gamma*kappa*mu*(-3 + 2*delta + xi) + delta*mu**2*(-1 + xi**2)))/((beta + (-1 + delta)*gamma*ms)*mu*(-1 + xi)))/2.
-	 
+
 	mf =  -(ms*(gamma*mu*(-1 + xi) + b*(beta - gamma*(kappa + 2*ms - 2*delta*ms) - mu*(1 + xi)) - \
             np.sqrt(gamma**2*mu**2*(-1 + xi)**2 - 2*b*gamma*mu*(-1 + xi)*(-beta + gamma*kappa - 2*(-1 + delta)*gamma*ms + mu + mu*xi) + \
               b**2*(beta**2 - 4*(-1 + delta)*gamma*ms*mu*(-1 + xi) + 2*beta*(gamma*kappa + 3*mu - mu*xi) + (gamma*kappa + mu + mu*xi)**2))\
@@ -377,7 +377,7 @@ def F_production_indep_wt_ss(wf, params):
 	mu = params['mu']
 
 	if not hasattr(wf,"__len__"): # if scalar
-		ws = alpha/mu 
+		ws = alpha/mu
 	else:
 		ws = alpha/mu * np.ones(len(wf))
 
@@ -424,7 +424,7 @@ def Z_differential_deg_ss(ws, params):
 
 	return ws, wf, ms, mf
 
-def Y_linear_feedback_deg_ss(ms, params):    
+def Y_linear_feedback_deg_ss(ms, params):
 	xi = params['xi']
 	gamma = params['gamma']
 	beta = params['beta']
@@ -432,7 +432,7 @@ def Y_linear_feedback_deg_ss(ms, params):
 	b = params['b']
 	mu = params['mu']
 	delta = params['delta']
-	
+
 	#c = params['c']
 	# ws = (mu*(beta - beta*c + c*gamma*ms + mu + c*mu) - \
 	# 	b*(-(beta*kappa) + beta*delta*ms + gamma*kappa*ms + kappa*mu + delta*ms*mu))/\
@@ -447,7 +447,7 @@ def Y_linear_feedback_deg_ss(ms, params):
 		(-(gamma*mu) + b*(beta + gamma*kappa + mu))
 	wf = -((b*(gamma*(kappa + ms - delta*ms) + 2*mu)*(-(mu*(gamma*ms + 2*mu)) + \
 		b*(-(beta*kappa) + beta*delta*ms + gamma*kappa*ms + kappa*mu + delta*ms*mu)))/\
-		((b*(beta + (-1 + delta)*gamma*ms - mu) - gamma*mu)*(-(gamma*mu) + b*(beta + gamma*kappa + mu)))) 
+		((b*(beta + (-1 + delta)*gamma*ms - mu) - gamma*mu)*(-(gamma*mu) + b*(beta + gamma*kappa + mu))))
 	mf = -((b*ms*(-(gamma*(kappa + ms - delta*ms)) - 2*mu))/(b*(beta + (-1 + delta)*gamma*ms - mu) - gamma*mu))
 
 	return ws, wf, ms, mf
@@ -513,7 +513,7 @@ class FeedbackControl(object):
 	:param ode_integrator_method: A string, the integration method for scipy.integrate.ode
 	:param max_int_steps: An int, number of steps allowed per iteration of integrator
 	:param TMAX: A float, Maximum time for integrator
-	:param dt: A float, time step of integrator 
+	:param dt: A float, time step of integrator
 	:param species_lim: A float, upper bound of initial copy number per species for trajectory plot
 	:param n_traj: An int, number of trajectories to plot
 	:param plotdir: A string, output directory of plots
@@ -521,25 +521,25 @@ class FeedbackControl(object):
 	:param plotextensions: A list of strings, extensions to save the phase portrait
 	"""
 
-	def __init__(self, network_defn, params, initial_state=[0,0,0,0], 
-					ode_integrator_method="vode", max_int_steps=10**10, TMAX = 200.0, dt = 1.0, 
-					species_lim = 500, n_traj = 20, 
+	def __init__(self, network_defn, params, initial_state=[0,0,0,0],
+					ode_integrator_method="vode", max_int_steps=10**10, TMAX = 200.0, dt = 1.0,
+					species_lim = 500, n_traj = 20,
 					plotdir = os.getcwd(), phaseportraitname = 'phase_portrait', plotextensions = ['svg','png']):
-		self.network_defn = network_defn 
-		self.params = params 
-		
-		self.initial_state = np.array(initial_state) 
-		self.ode_integrator_method = ode_integrator_method 
-		self.max_int_steps = max_int_steps  
-		self.TMAX = TMAX 
-		self.dt = dt 
-		
-		self.species_lim = species_lim 
-		self.n_traj = n_traj 
+		self.network_defn = network_defn
+		self.params = params
 
-		self.plotdir = plotdir 
-		self.phaseportraitname = phaseportraitname 
-		self.plotextensions = plotextensions 
+		self.initial_state = np.array(initial_state)
+		self.ode_integrator_method = ode_integrator_method
+		self.max_int_steps = max_int_steps
+		self.TMAX = TMAX
+		self.dt = dt
+
+		self.species_lim = species_lim
+		self.n_traj = n_traj
+
+		self.plotdir = plotdir
+		self.phaseportraitname = phaseportraitname
+		self.plotextensions = plotextensions
 
 		self.t = 0.0
 		self.state = self.initial_state
@@ -555,8 +555,8 @@ class FeedbackControl(object):
 	def __str__(self):
 		return 'General feedback control object'
 
-	
-	
+
+
 	def print_state(self):
 		"""
 		Print the current state of the system
@@ -569,8 +569,8 @@ class FeedbackControl(object):
 		Make a single trajectory of ODE system by numerical integration
 		"""
 		self.state_trajectory = np.nan*np.zeros((int(self.TMAX/self.dt)+1,self.n_species+1)) # preallocate trajectory to nan
-		
-		# Set up ODE			
+
+		# Set up ODE
 		r = ode(self.network_defn).set_integrator(self.ode_integrator_method, nsteps=self.max_int_steps)
 		r.set_initial_value(self.initial_state, 0.0).set_f_params(self.params)
 		self.state_trajectory[0,:] = np.insert(self.initial_state, 0, 0.0) # initial condition
@@ -588,16 +588,16 @@ class FeedbackControl(object):
 		if r.successful() == False:
 			print('integration error')
 			return
-	  	 
 
-	def make_random_trajectories(self):	
+
+	def make_random_trajectories(self):
 		"""
 		Creates a 3D array where the indicies are:
 			0 : time
 			1 : state
 			2 : trajectory repetition
 		for random initial conditions
-		"""	
+		"""
 		self.state_trajectory_set = np.nan*np.zeros((int(self.TMAX/self.dt)+1,self.n_species+1,self.n_traj)) # Tensor of trajectories preallocate to nan
 		for k in range(self.n_traj):
 			print(k)
@@ -656,11 +656,11 @@ class FeedbackControl(object):
 		# Unpack to make code more readable
 		t_sol = self.state_trajectory_set[:,0,k]; ws_sol = self.state_trajectory_set[:,1,k]; wf_sol = self.state_trajectory_set[:,2,k]; ms_sol = self.state_trajectory_set[:,3,k]; mf_sol = self.state_trajectory_set[:,4,k]
 
-		ws_init = init_state[1]; wf_init = init_state[2]; ms_init = init_state[3]; mf_init = init_state[4];			
-		t_final = final_state[0]; ws_final = final_state[1]; wf_final = final_state[2]; ms_final = final_state[3]; mf_final = final_state[4];	
+		ws_init = init_state[1]; wf_init = init_state[2]; ms_init = init_state[3]; mf_init = init_state[4];
+		t_final = final_state[0]; ws_final = final_state[1]; wf_final = final_state[2]; ms_final = final_state[3]; mf_final = final_state[4];
 
 		if k == 0:
-			ax = axs[0]		
+			ax = axs[0]
 			ax.plot(ws_sol + wf_sol, ms_sol + mf_sol, '-b', alpha = 0.2, label = 'Trajectory')
 			ax.plot(ws_init + wf_init, ms_init + mf_init, '.b', alpha = 0.2, label = 'Initial condition')
 			ax.plot(ws_final + wf_final, ms_final + mf_final, 'sk', alpha = 0.2, label = 'Final condition')
@@ -675,7 +675,7 @@ class FeedbackControl(object):
 			ax.plot(t_sol[0], ws_init + ms_init + wf_init + mf_init, '.b', alpha = 0.2, label = 'Initial condition')
 			ax.plot(t_final, ws_final + ms_final + wf_final + mf_final, 'sk', alpha = 0.2, label = 'Final condition')
 		else:
-			ax = axs[0]		
+			ax = axs[0]
 			ax.plot(ws_sol + wf_sol, ms_sol + mf_sol, '-b', alpha = 0.2)
 			ax.plot(ws_final + wf_final, ms_final + mf_final, 'sk', alpha = 0.2)
 			ax.plot(ws_init + wf_init, ms_init + mf_init, '.b', alpha = 0.2)
@@ -689,7 +689,7 @@ class FeedbackControl(object):
 			ax.plot(t_sol, ws_sol + ms_sol + wf_sol + mf_sol, '-b', alpha = 0.2)
 			ax.plot(t_sol[0], ws_init + ms_init + wf_init + mf_init, '.b', alpha = 0.2)
 			ax.plot(t_final, ws_final + ms_final + wf_final + mf_final, 'sk', alpha = 0.2)
-	
+
 
 	def make_trajetory_plot(self):
 		"""
@@ -701,11 +701,11 @@ class FeedbackControl(object):
 		if self.state_trajectory_set is None:
 			raise Exception('state_trajectory_set does not exist. Run FeedbackControl.make_random_trajectories()')
 
-		
 
-		
+
+
 		fig, axs = plt.subplots(1,3, figsize = (15,5))
-		axs = axs.ravel()		
+		axs = axs.ravel()
 
 		for k in range(self.n_traj):
 			self.add_to_trajectory_plot(axs, k)
@@ -729,9 +729,9 @@ class FeedbackControl(object):
 		fmt = matplotlib.ticker.StrMethodFormatter("{x}")
 		for ax in axs:
 			ax.xaxis.set_major_formatter(fmt)
-			ax.yaxis.set_major_formatter(fmt) 
-			ax.xaxis.set_major_formatter(FormatStrFormatter('%d'))   
-			ax.yaxis.set_major_formatter(FormatStrFormatter('%d'))   
+			ax.yaxis.set_major_formatter(fmt)
+			ax.xaxis.set_major_formatter(FormatStrFormatter('%d'))
+			ax.yaxis.set_major_formatter(FormatStrFormatter('%d'))
 
 		plt.tight_layout()
 
@@ -764,8 +764,8 @@ class FeedbackControl(object):
 		if plotname is not None:
 			for extn in self.plotextensions:
 				plt.savefig(self.plotdir+'/'+plotname+'.'+extn)
-		
-		
+
+
 class SoluableFeedbackControl(FeedbackControl):
 	"""
 	Subclass of FeedbackControl, whose steady state is soluable
@@ -779,16 +779,16 @@ class SoluableFeedbackControl(FeedbackControl):
 	def __str__(self):
 		return 'Feedback control where SS is analytically tractible'
 
-	def __init__(self, ss_definition, ss_indep_variable, 
+	def __init__(self, ss_definition, ss_indep_variable,
 		max_indep_var_val = None, phys_ss_is_point = False,
 		**kwargs):
 		super(SoluableFeedbackControl, self).__init__(**kwargs) # ensure child class calls the correct parent class using super()
 
 		self.ss_definition = ss_definition # a function defining the steady state
-		
+
 		if ss_indep_variable not in self.param_convention:
 			raise Exception("ss_indep_variable must be an element of ['ws', 'wf', 'ms', 'mf']")
-		self.ss_indep_variable = ss_indep_variable 
+		self.ss_indep_variable = ss_indep_variable
 		self.ss_indep_variable_index = self.param_convention_map[ss_indep_variable]
 
 		# For plotting the SS line
@@ -804,10 +804,10 @@ class SoluableFeedbackControl(FeedbackControl):
 		if self.state_trajectory_set is None:
 			raise Exception('state_trajectory_set does not exist. Run FeedbackControl.make_random_trajectories()')
 
-		self.min_state = np.array([self.state_trajectory_set[-1,i+1,:].min() for i in range(4)]) 
-		self.max_state = np.array([self.state_trajectory_set[-1,i+1,:].max() for i in range(4)]) 
-	
-	
+		self.min_state = np.array([self.state_trajectory_set[-1,i+1,:].min() for i in range(4)])
+		self.max_state = np.array([self.state_trajectory_set[-1,i+1,:].max() for i in range(4)])
+
+
 	def add_to_trajectory_plot(self, axs, k):
 		"""
 		Add a single ODE trajectory from self.state_trajectory_set to a (1,3) plot containing
@@ -817,7 +817,7 @@ class SoluableFeedbackControl(FeedbackControl):
 		"""
 		if self.state_trajectory_set is None:
 			raise Exception('state_trajectory_set does not exist. Run FeedbackControl.make_random_trajectories()')
-		
+
 
 		final_state = self.state_trajectory_set[-1,:,k]
 		init_state = self.state_trajectory_set[0,:,k]
@@ -825,15 +825,15 @@ class SoluableFeedbackControl(FeedbackControl):
 		# Unpack to make code more readable
 		t_sol = self.state_trajectory_set[:,0,k]; ws_sol = self.state_trajectory_set[:,1,k]; wf_sol = self.state_trajectory_set[:,2,k]; ms_sol = self.state_trajectory_set[:,3,k]; mf_sol = self.state_trajectory_set[:,4,k]
 
-		ws_init = init_state[1]; wf_init = init_state[2]; ms_init = init_state[3]; mf_init = init_state[4];			
-		t_final = final_state[0]; ws_final = final_state[1]; wf_final = final_state[2]; ms_final = final_state[3]; mf_final = final_state[4];	
+		ws_init = init_state[1]; wf_init = init_state[2]; ms_init = init_state[3]; mf_init = init_state[4];
+		t_final = final_state[0]; ws_final = final_state[1]; wf_final = final_state[2]; ms_final = final_state[3]; mf_final = final_state[4];
 
 		# Get deterministic steady state
 		ws_det_ss, wf_det_ss, ms_det_ss, mf_det_ss = self.ss_definition(final_state[self.ss_indep_variable_index+1], self.params) # +1 since first index is time in self.state_trajectory_set
 		n_det_ss = ws_det_ss+wf_det_ss+ms_det_ss+mf_det_ss
 
 		if k == 0:
-			ax = axs[0]		
+			ax = axs[0]
 			l=ax.plot(ws_sol + wf_sol, ms_sol + mf_sol, '-b', alpha = 0.2, label = 'Trajectory')
 			ax.plot(ws_init + wf_init, ms_init + mf_init, '.b', alpha = 0.2, label = 'Initial condition')
 			ax.plot(ws_final + wf_final, ms_final + mf_final, 'sk', alpha = 0.2, label = 'Final condition')
@@ -853,7 +853,7 @@ class SoluableFeedbackControl(FeedbackControl):
 
 			ax.plot(t_final, n_det_ss, 'xr', alpha = 0.5, label = 'Final condition theory')
 		else:
-			ax = axs[0]		
+			ax = axs[0]
 			l=ax.plot(ws_sol + wf_sol, ms_sol + mf_sol, '-b', alpha = 0.2)
 			ax.plot(ws_final + wf_final, ms_final + mf_final, 'sk', alpha = 0.2)
 			ax.plot(ws_init + wf_init, ms_init + mf_init, '.b', alpha = 0.2)
@@ -905,10 +905,10 @@ class SoluableFeedbackControl(FeedbackControl):
 			else:
 				axs[1].plot(wsss_space+msss_space,wfss_space+mfss_space,'-r',label='Theory')
 
-	
 
 
-	
+
+
 ##############################################################
 # Multiple serial feedback control for running on HPC
 ##############################################################
@@ -940,8 +940,8 @@ class FeedbackControlHPC(FeedbackControl):
 		Make a single trajectory of ODE system by numerical integration, exiting if walltime is approached
 		"""
 		self.state_trajectory = np.nan*np.zeros((int(self.TMAX/self.dt)+1,5)) # preallocate trajectory to nan
-		
-		# Set up ODE			
+
+		# Set up ODE
 		r = ode(self.network_defn).set_integrator(self.ode_integrator_method, nsteps=self.max_int_steps)
 		r.set_initial_value(self.initial_state, 0.0).set_f_params(self.params)
 		self.state_trajectory[0,:] = np.insert(self.initial_state, 0, 0.0) # initial condition
@@ -958,4 +958,3 @@ class FeedbackControlHPC(FeedbackControl):
 			self.state = r.y # update instantaneous state
 			self.state_trajectory[i,:] = np.insert(r.y, 0, r.t) # append state to trajectory
 			i+=1
-
